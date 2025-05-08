@@ -1,0 +1,137 @@
+﻿<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Endirim Çarxı</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: sans-serif;
+            background: #f7f7f7;
+            padding-top: 50px;
+        }
+
+        #wheel-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 20px auto;
+        }
+
+        .arrow {
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-bottom: 20px solid #333;
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%) rotate(180deg);
+            z-index: 2;
+        }
+
+        #wheel {
+            display: block;
+            transform-origin: 50% 50%;
+            transition: transform 4s cubic-bezier(.33,1,.68,1);
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 18px;
+            background: #2196F3;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+            button:disabled {
+                background: #90caf9;
+                cursor: not-allowed;
+            }
+
+        #result {
+            margin-top: 30px;
+            font-size: 24px;
+            font-weight: bold;
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <h1>Çarxı Fırlat və Endirim Qazan!</h1>
+    <div id="wheel-container">
+        <div class="arrow"></div>
+        <canvas id="wheel" width="300" height="300"></canvas>
+    </div>
+    <button id="spin-btn" onclick="spinWheel()">Çarxı Fırlat</button>
+    <div id="result"></div>
+    <script>
+const canvas  = document.getElementById('wheel');
+const ctx     = canvas.getContext('2d');
+const btn     = document.getElementById('spin-btn');
+const result  = document.getElementById('result');
+
+const segments = ['7%','5%','10%','15%','12%'];
+const colors   = ['#f44336','#4caf50','#ff9800','#2196f3','#9c27b0'];
+
+const SEG_ANGLE = 360 / segments.length;
+const POINTER_ANG = 270;
+let  currentRot = 0;
+let  hasSpun = false;
+
+function drawWheel(){
+  ctx.clearRect(0,0,300,300);
+  for(let i=0;i<segments.length;i++){
+    const start = i*SEG_ANGLE * Math.PI/180;
+    const end   = (i+1)*SEG_ANGLE * Math.PI/180;
+
+    ctx.beginPath();
+    ctx.moveTo(150,150);
+    ctx.arc(150,150,150,start,end);
+    ctx.fillStyle = colors[i];
+    ctx.fill();
+
+    ctx.fillStyle='#fff';
+    ctx.font='16px sans-serif';
+    ctx.textAlign='center';
+    ctx.save();
+    ctx.translate(150,150);
+    ctx.rotate(start + (end-start)/2);
+    ctx.fillText(segments[i],100,10);
+    ctx.restore();
+  }
+}
+drawWheel();
+
+function spinWheel(){
+  if (hasSpun) return;
+  hasSpun = true;
+
+  btn.disabled = true;
+  result.textContent = '';
+
+  const idx        = Math.floor(Math.random()*segments.length);
+  const middleAng  = idx*SEG_ANGLE + SEG_ANGLE/2;
+
+  const currentMod = currentRot % 360;
+  let delta        = (POINTER_ANG - middleAng - currentMod + 360) % 360;
+  if(delta < 30) delta += 360;
+
+  const extraSpin  = 4*360;
+  currentRot      += extraSpin + delta;
+
+  canvas.style.transform = `rotate(${currentRot}deg)`;
+
+  canvas.addEventListener('transitionend', function onEnd(){
+    canvas.removeEventListener('transitionend', onEnd);
+    result.textContent = `Təbriklər! ${segments[idx]} endirim qazandınız.`;
+  });
+}
+    </script>
+</body>
+</html>
